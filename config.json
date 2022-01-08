@@ -1,0 +1,19 @@
+{
+    "info": {
+        "name": "StickerSnatcher",
+        "authors": [{
+            "name": "ImTheSquid",
+            "discord_id": "262055523896131584",
+            "github_username": "ImTheSquid",
+            "twitter_username": "ImTheSquid11"
+        }],
+        "version": "1.0.0",
+        "description": "Allows for easy sticker saving.",
+        "github": "https://github.com/ImTheSquid/StickerSnatcher",
+        "github_raw": "https://raw.githubusercontent.com/ImTheSquid/StickerSnatcher/master/StickerSnatcher.plugin.js"
+    },
+    "changelog": [
+        {"title": "Right-Click, Save", "items": ["First release."]}
+    ],
+    "main": "index.js"
+}
