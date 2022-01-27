@@ -28,7 +28,7 @@
 @else@*/
 
 module.exports = (() => {
-    const config = {"info":{"name":"StickerSnatcher","authors":[{"name":"ImTheSquid","discord_id":"262055523896131584","github_username":"ImTheSquid","twitter_username":"ImTheSquid11"}],"version":"1.0.0","description":"Allows for easy sticker saving.","github":"https://github.com/ImTheSquid/StickerSnatcher","github_raw":"https://raw.githubusercontent.com/ImTheSquid/StickerSnatcher/master/StickerSnatcher.plugin.js"},"changelog":[{"title":"Right-Click, Save","items":["First release."]}],"main":"index.js"};
+    const config = {"info":{"name":"StickerSnatcher","authors":[{"name":"ImTheSquid","discord_id":"262055523896131584","github_username":"ImTheSquid","twitter_username":"ImTheSquid11"}],"version":"1.0.1","description":"Allows for easy sticker saving.","github":"https://github.com/ImTheSquid/StickerSnatcher","github_raw":"https://raw.githubusercontent.com/ImTheSquid/StickerSnatcher/master/StickerSnatcher.plugin.js"},"changelog":[{"title":"Discord Fixes","items":["Fixed context menus not working."]}],"main":"index.js"};
 
     return !global.ZeresPluginLibrary ? class {
         constructor() {this._config = config;}
@@ -54,21 +54,23 @@ module.exports = (() => {
         const plugin = (Plugin, Library) => {
     "use strict";
 
-    const {Logger, Patcher, WebpackModules, DiscordContextMenu} = Library;
+    const {Logger, Patcher, WebpackModules, ContextMenu} = Library;
 
     class StickerSnatcher extends Plugin {
         onStart() {
             this.messageContextMenu = WebpackModules.find(mod => mod.default?.displayName === "MessageContextMenu");
             this.imageUtils = WebpackModules.getByProps("copyImage", "saveImage");
 
-            Patcher.after(this.messageContextMenu, "default", (_, [arg], ret) => {
-                if (arg.message.stickerItems.length == 0) {
-                    return;
-                }
-
-                ret.props.children.splice(4, 0, DiscordContextMenu.buildMenuItem({type: "separator"}), DiscordContextMenu.buildMenuItem({label: "Save Sticker", action: () => {
-                    this.imageUtils.saveImage(this.getLinkForStickerInMessageWithID(arg.message.id));
-                }}));
+            ContextMenu.getDiscordMenu("MessageContextMenu").then(menu => {
+                Patcher.after(menu, "default", (_, [arg], ret) => {
+                    if (arg.message.stickerItems.length == 0) {
+                        return;
+                    }
+    
+                    ret.props.children.splice(4, 0, ContextMenu.buildMenuItem({type: "separator"}), ContextMenu.buildMenuItem({label: "Save Sticker", action: () => {
+                        this.imageUtils.saveImage(this.getLinkForStickerInMessageWithID(arg.message.id));
+                    }}));
+                });
             });
         };
 
