@@ -1,54 +1,46 @@
 module.exports = (Plugin, Library) => {
     "use strict";
 
-    const {Logger, Patcher, WebpackModules, ContextMenu} = Library;
+    const {Patcher, WebpackModules, ContextMenu, DiscordModules} = Library;
+    const {Dispatcher} = DiscordModules;
 
     class StickerSnatcher extends Plugin {
         onStart() {
             this.messageContextMenu = WebpackModules.find(mod => mod.default?.displayName === "MessageContextMenu");
             this.imageUtils = WebpackModules.getByProps("copyImage", "saveImage");
+            this.stickerComponent = WebpackModules.find(mod => mod.default?.displayName === "Sticker");
+            this.stickerMod = WebpackModules.getByProps("isStandardSticker");
+
+            // Make sure Nitro stickers are not selectable
+            this.standardStickers = new Set();
+            Patcher.after(this.stickerComponent, "default", (_, [arg], ret) => {
+                if (this.stickerMod.isStandardSticker(arg.sticker)) {
+                    this.standardStickers.add(arg.sticker.id);
+                }
+            });
+
+            this.onChannelChange = _ => {
+                // Clear standard stickers to preserve memory
+                this.standardStickers.clear();
+            }
+
+            Dispatcher.subscribe("CHANNEL_SELECT", this.onChannelChange);
 
             ContextMenu.getDiscordMenu("MessageContextMenu").then(menu => {
                 Patcher.after(menu, "default", (_, [arg], ret) => {
-                    if (arg.message.stickerItems.length == 0) {
+                    if (arg.message.stickerItems.length == 0 || arg.message.stickerItems.some(sticker => this.standardStickers.has(sticker.id) )) {
                         return;
                     }
     
                     ret.props.children.splice(4, 0, ContextMenu.buildMenuItem({type: "separator"}), ContextMenu.buildMenuItem({label: "Save Sticker", action: () => {
-                        this.imageUtils.saveImage(this.getLinkForStickerInMessageWithID(arg.message.id));
+                        this.imageUtils.saveImage(this.stickerMod.getStickerAssetUrl(arg.message.stickerItems[0], {isPreview: false}));
                     }}));
                 });
             });
         };
 
-        getLinkForStickerInMessageWithID(messageID) {
-            const accessories = document.getElementById(`message-accessories-${messageID}`);
-
-            if (!accessories) {
-                Logger.log("Unable to find accessories element");
-                return null;
-            }
-
-            const sticker = this.findFirstInDOMChildren(accessories, /clickableSticker/, element => element.className);
-
-            if (!sticker) {
-                Logger.log("Unable to find sticker element");
-                return null;
-            }
-
-            return sticker.children[0].children[0].children[0].src;
-        };
-
-        findFirstInDOMChildren(element, regex, childFormat) {
-            for (const child of element.children) {
-                if (childFormat(child) && regex.test(childFormat(child))) {
-                    return child;
-                }
-            }
-            return null;
-        };
-
         onStop() {
+            Dispatcher.unsubscribe("CHANNEL_SELECT", this.onChannelChange);
             Patcher.unpatchAll();
         };
     };
