@@ -28,7 +28,7 @@
 @else@*/
 
 module.exports = (() => {
-    const config = {"info":{"name":"StickerSnatcher","authors":[{"name":"ImTheSquid","discord_id":"262055523896131584","github_username":"ImTheSquid","twitter_username":"ImTheSquid11"}],"version":"1.1.0","description":"Allows for easy sticker saving.","github":"https://github.com/ImTheSquid/StickerSnatcher","github_raw":"https://raw.githubusercontent.com/ImTheSquid/StickerSnatcher/master/StickerSnatcher.plugin.js"},"changelog":[{"title":"One format to rule them all","items":["StickerSnatcher now automatically converts all saved stickers to PNG.","You can now copy stickers! They may not show up as animated in chats, but they will be animated if added to a server."]}],"main":"index.js"};
+    const config = {"info":{"name":"StickerSnatcher","authors":[{"name":"ImTheSquid","discord_id":"262055523896131584","github_username":"ImTheSquid","twitter_username":"ImTheSquid11"}],"version":"1.1.1","description":"Allows for easy sticker saving.","github":"https://github.com/ImTheSquid/StickerSnatcher","github_raw":"https://raw.githubusercontent.com/ImTheSquid/StickerSnatcher/master/StickerSnatcher.plugin.js"},"changelog":[{"title":"Fixes","items":["Made sure PNGs aren't needlessly reconverted on copy."]}],"main":"index.js"};
 
     return !global.ZeresPluginLibrary ? class {
         constructor() {this._config = config;}
@@ -90,11 +90,16 @@ module.exports = (() => {
                     let url = this.stickerMod.getStickerAssetUrl(arg.message.stickerItems[0], {isPreview: false});
     
                     ret.props.children.splice(4, 0, ContextMenu.buildMenuItem({type: "separator"}), ContextMenu.buildMenuItem({label: "Copy Sticker", action: () => {
-                        this.convertWebpToPng(url).then(buf => {
-                            // Could possibly use this.master.clipboard but I don't feel like it
-                            const electron = require("electron");
-                            electron.clipboard.writeImage(electron.nativeImage.createFromDataURL(buf));
-                        })
+                        let urlObj = new URL(url);
+                        if (urlObj.pathname.endsWith(".png")) {
+                            this.imageUtils.copyImage(url);
+                        } else {
+                            this.convertWebpToPng(url).then(buf => {
+                                // Could possibly use this.master.clipboard but I don't feel like it
+                                const electron = require("electron");
+                                electron.clipboard.writeImage(electron.nativeImage.createFromDataURL(buf));
+                            })
+                        }
                     }}), ContextMenu.buildMenuItem({label: "Save Sticker", action: () => {
                         this.downloadAndConvertImage(url).then(buf => {
                             this.master.fileManager.saveWithDialog(new Uint8Array(buf), "sticker.png");
@@ -106,12 +111,10 @@ module.exports = (() => {
 
         async downloadAndConvertImage(url) {
             const urlObj = new URL(url);
-            const pathComponents = urlObj.pathname.split("/");
-            const fileName = pathComponents[pathComponents.length - 1];
-
+            
             // If URL ends with .png, no conversion needed so just download to specified path
             let arrayBuf = null;
-            if (fileName.endsWith(".png")) {
+            if (urlObj.pathname.endsWith(".png")) {
                 arrayBuf = await fetch(url).then(r => r.blob()).then(b => b.arrayBuffer());
             } else {
                 const data = await this.convertWebpToPng(url);
