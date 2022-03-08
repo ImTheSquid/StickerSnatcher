@@ -64,6 +64,7 @@ module.exports = (() => {
             this.stickerComponent = WebpackModules.find(mod => mod.default?.displayName === "Sticker");
             this.stickerMod = WebpackModules.getByProps("isStandardSticker");
             this.master = WebpackModules.getByProps("app", "clipboard", "features", "fileManager");
+            this.canvas = document.createElement("canvas");
 
             // Make sure Nitro stickers are not selectable
             this.standardStickers = new Set();
@@ -125,13 +126,12 @@ module.exports = (() => {
             const blob = await fetch(url).then(r => r.blob());
             const imageBitmap = await createImageBitmap(blob);
 
-            let canvas = document.createElement("canvas");
-            canvas.width = imageBitmap.width;
-            canvas.height = imageBitmap.height;
-            let context = canvas.getContext("2d");
+            this.canvas.width = imageBitmap.width;
+            this.canvas.height = imageBitmap.height;
+            let context = this.canvas.getContext("2d");
 
             context.drawImage(imageBitmap, 0, 0);
-            return canvas.toDataURL("image/png");
+            return this.canvas.toDataURL("image/png");
         }
 
         onStop() {
