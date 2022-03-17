@@ -9,3 +9,4 @@ Discord-made stickers can't be downloaded for DMCA reasons.
 
 ## My Other Plugins
 - [SplitLargeFiles](https://github.com/ImTheSquid/SplitLargeFiles)
+- [SettingsSync](https://github.com/ImTheSquid/SettingsSync)
