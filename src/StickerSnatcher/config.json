@@ -7,13 +7,13 @@
             "github_username": "ImTheSquid",
             "twitter_username": "ImTheSquid11"
         }],
-        "version": "1.1.1",
+        "version": "1.1.2",
         "description": "Allows for easy sticker saving.",
         "github": "https://github.com/ImTheSquid/StickerSnatcher",
         "github_raw": "https://raw.githubusercontent.com/ImTheSquid/StickerSnatcher/master/StickerSnatcher.plugin.js"
     },
     "changelog": [
-        {"title": "Fixes", "items": ["Made sure PNGs aren't needlessly reconverted on copy."]}
+        {"title": "Fixes", "items": ["Fixed for BD 1.8.0"]}
     ],
     "main": "index.js"
 }
